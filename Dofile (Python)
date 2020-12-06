@@ -1,0 +1,56 @@
+Do-file:
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy 
+from statsmodels.formula.api import ols
+from sklearn.linear_model import LinearRegression
+
+file = r'C:/Users/19085/Downloads/ps4.csv'
+pd.read_csv(file)
+df = pd.read_csv(file)
+df.describe()
+valtab = pd.DataFrame(df, columns = ['valueCars', 'valueCoal', 'valueCoffee', 'valueIron_Steel', 'valueNaturalGas', 'valueOil'])
+
+CorrMatrix = valtab.corr()
+print(CorrMatrix)
+dfsc = df[['destination_fullname','origin_fullname', 'valueIron_Steel', 'valueCars']]
+dfsc
+dfsci = dfsc.groupby('destination_fullname').agg({'valueIron_Steel':'sum', 'valueCars' :'sum'})
+dfsci.sort_values(by = ['valueIron_Steel'], ascending = False)
+#3 EU is the largest importer
+
+dfsci.sort_values(by = ['valueCars'], ascending = False)
+#America imports the largest number of cars
+dfsck = dfsc.groupby('origin_fullname').agg({'valueIron_Steel':'sum', 'valueCars' :'sum'})
+dfsck.sort_values(by = ['valueIron_Steel'], ascending = False)
+#Largest exporter of steel
+dfsck.sort_values(by = ['valueCars'], ascending = False)
+#Largest exporter of cars
+ie = df[df['origin_fullname'] == 'China']
+plt.style.use('ggplot')
+fig, ax = plt.subplots()
+scatplt = ax.scatter(
+ie['distw'],
+ie['valueIron_Steel']
+)
+ax.set_xlabel('Kilometers from China')
+ax.set_ylabel('Value in USD')
+ax.set_title('China Exports')
+plt.show()
+dflog = df[(df.T != 0).any()]
+dflog.dropna()
+
+dflog['valueIron_Steel'] = np.log(dflog['valueIron_Steel'])
+dflog['gdp_o'] = np.log(dflog['gdp_o'])
+dflog['gdp_d'] = np.log(dflog['gdp_d'])
+dflog['distw'] = np.log(dflog['distw'])
+model = ols('valueIron_Steel ~ gdp_o + gdp_d + distw', dflog).fit()
+print(model.summary())
+model3 = ols('valueIron_Steel ~ gdp_o + gdp_d + distw + comlang_off + contig + comcur + comrelig + fta_wto', dflog).fit()
+print(model3.summary())
+dflog['valueCars'] = np.log(dflog['valueCars'])
+model4 = ols('valueCars ~ gdp_o + gdp_d + distw', dflog).fit()
+print(model4.summary())
+model5 = ols('valueCars ~ gdp_o + gdp_d + distw + comlang_off + contig + comcur + comrelig + fta_wto', dflog).fit()
+print(model5.summary())
